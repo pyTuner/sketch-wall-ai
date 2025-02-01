@@ -4,6 +4,7 @@ import { fontFamily } from '../theme';
 import Feather from 'react-native-vector-icons/Feather'
 
 const ImageCard = ({ item }) => {
+    console.log(item.item)
     return (
         <View style={styles.imageCard}>
             {/* Image */}
@@ -16,6 +17,7 @@ const ImageCard = ({ item }) => {
             {/* prompt */}
             <Text
                 style={styles.promptText}
+                numberOfLines={2}
             >
                 {item?.prompt || 'No Prompt!'}
             </Text>
@@ -23,16 +25,16 @@ const ImageCard = ({ item }) => {
             {/* Button container */}
             <View style={styles.buttonContainer}>
                 <TouchableOpacity style={styles.actionButton}>
-                    <Feather name='download' size={20} color='#fff' />
+                    <Feather name='download' size={25} color='#fff' />
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.actionButton}>
-                    <Feather name='share' size={20} color='#fff' />
+                    <Feather name='share' size={25} color='#fff' />
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.actionButton}>
-                    <Feather name='copy' size={20} color='#fff' />
+                    <Feather name='copy' size={25} color='#fff' />
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.actionButton}>
-                    <Feather name='heart' size={20} color='#fff' />
+                    <Feather name='heart' size={25} color='#fff' />
                 </TouchableOpacity>
             </View>
         </View>
@@ -65,7 +67,8 @@ const styles = StyleSheet.create({
     buttonContainer: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        marginTop: 10,
+        marginTop: 15,
+        marginHorizontal: 8,
     },
     actionButton: {
         padding: 10,
