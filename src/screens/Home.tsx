@@ -20,7 +20,7 @@ const Home = () => {
     }
 
     return (
-        <ScrollView contentContainerStyle={styles.container}>
+        <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
 
             {/* Logo container */}
             <View style={styles.appLogoContainer}>
