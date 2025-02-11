@@ -5,6 +5,7 @@ import Feather from 'react-native-vector-icons/Feather';
 import { requestWriteStoragePermission } from '../utils';
 import ReactNativeBlobUtil from 'react-native-blob-util';
 import Share from 'react-native-share';
+import Clipboard from '@react-native-clipboard/clipboard';
 
 
 const ImageCard = ({ item }: { item: any }) => {
@@ -34,7 +35,6 @@ const ImageCard = ({ item }: { item: any }) => {
             const base64Url = await downloadImage(PROCESSING); // received base64Image
 
             if (base64Url) {
-                console.log('im')
                 await processImageToShare(base64Url);
             }
 
@@ -45,6 +45,22 @@ const ImageCard = ({ item }: { item: any }) => {
             });
         }
 
+    }
+
+    const handleCopyImage = async () => {
+        try {
+
+            const imageUrl = item.imageUrl;
+            if (imageUrl) {
+                Clipboard.setString(imageUrl);
+                ToastAndroid.show('Image copied to clipboard!', ToastAndroid.SHORT);
+            } else {
+                ToastAndroid.show('Failed to copy image!', ToastAndroid.SHORT);
+            }
+        } catch (error) {
+            console.log('Error copying image:', error);
+            ToastAndroid.show('Error copying image!', ToastAndroid.SHORT);
+        }
     }
 
     // helper fn------------>
@@ -110,7 +126,7 @@ const ImageCard = ({ item }: { item: any }) => {
                     ToastAndroid.show('No image to share!', ToastAndroid.SHORT);
                     return null;
                 }
-                console.log('data to return: ', base64Data)
+                // console.log('data to return: ', base64Data)
                 return base64Data;
             }
             setDownloadProgress(0);
@@ -197,7 +213,7 @@ const ImageCard = ({ item }: { item: any }) => {
                 <TouchableOpacity style={styles.actionButton} onPress={handleShare}>
                     <Feather name='share' size={25} color='#fff' />
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.actionButton}>
+                <TouchableOpacity style={styles.actionButton} onPress={handleCopyImage}>
                     <Feather name='copy' size={25} color='#fff' />
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.actionButton}>
