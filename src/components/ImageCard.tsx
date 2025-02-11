@@ -4,73 +4,130 @@ import { fontFamily } from '../theme';
 import Feather from 'react-native-vector-icons/Feather';
 import { requestWriteStoragePermission } from '../utils';
 import ReactNativeBlobUtil from 'react-native-blob-util';
+import Share from 'react-native-share';
+
 
 const ImageCard = ({ item }: { item: any }) => {
     console.log(item.item);
 
     // states
     const [isDownloading, setIsDownloading] = useState<boolean>(false);
+    const [isProcessing, setIsProcessing] = useState<boolean>(false);
     const [downloadProgress, setDownloadProgress] = useState<number>(0);
+    // constants
+    const DOWNLOADING = 'DOWNLOADING';
+    const PROCESSING = 'PROCESSING';
 
 
     // console.log('isDownloading: ', isDownloading);
     // console.log('downloadProgress', downloadProgress);
 
     // handle fns
-    const handleDownload = async () => {
+
+    const handleDownload = () => {
+        downloadImage(DOWNLOADING);
+    }
+
+
+    const handleShare = async () => {
+        try {
+            const base64Url = await downloadImage(PROCESSING); // received base64Image
+
+            if (base64Url) {
+                console.log('im')
+                await processImageToShare(base64Url);
+            }
+
+        } catch (error: any) {
+            console.log({
+                error: 'Error sharing image!',
+                message: error.message
+            });
+        }
+
+    }
+
+    // helper fn------------>
+
+    // to download the image
+    const downloadImage = async (purpose: any) => {
         // console.log('downloading...')
 
-        // ask permission
-        const isGranted = await requestWriteStoragePermission();
+        // ask permission ---------------->
+        const isGranted = await requestWriteStoragePermission(); // android-os permission to store the image into storage
         // console.log('permission', isGranted);
 
         if (!isGranted) {
             return;
         }
 
-        // download the file using react-native-blob util
+        // download the file using react-native-blob util ---------------->
 
         const imageURL = item?.imageUrl;  // image url
         const PictureDirectory = ReactNativeBlobUtil.fs.dirs.PictureDir;  // directory path
         const filePath = `${PictureDirectory}/sketchAi_${Date.now()}.png`;
 
 
-        setIsDownloading(true);
+        purpose === DOWNLOADING ?
+            setIsDownloading(true) :
+            setIsProcessing(true)
 
-        // download fn
-        ReactNativeBlobUtil
-            .config({
+
+        try {
+            const res = await ReactNativeBlobUtil.config({
                 path: filePath,
                 appendExt: 'png',
                 fileCache: true,
-                addAndroidDownloads: {
-                    useDownloadManager: true,
-                    notification: true,
-                    path: filePath,
-                    description: 'Downloadning image...',
-                    mime: 'image/png',
-                    mediaScannable: true
-                }
-            })
-            .fetch('GET', imageURL).progress({ interval: 100 }, (received, total) => {
+                addAndroidDownloads: purpose === DOWNLOADING ?
+                    {
+                        useDownloadManager: true,
+                        notification: true,
+                        path: filePath,
+                        description: 'Downloadning Image...',
+                        mime: 'image/png',
+                        mediaScannable: true
+                    } :
+                    {
+                        useDownloadManager: false,
+                        notification: false,
+                        title: filePath,
+                        description: 'Processing Image...',
+                    }
+            }).fetch('GET', imageURL).progress({ interval: 100 }, (received, total) => {
                 let percentage = Math.floor((received / total) * 100);
                 setDownloadProgress(percentage);
             })
-            .then((res) => {
-                copyMediaToStorage(filePath, filePath)
+
+            if (purpose === DOWNLOADING) {
+                await copyMediaToStorage(filePath, filePath)
                 setIsDownloading(false);
-                setDownloadProgress(0);
                 ToastAndroid.show('Image downloaded successfully!', ToastAndroid.SHORT);
-            })
-            .catch((error) => {
-                console.log({
-                    message: 'error occured!',
-                    error: error.message
-                });
-            })
+                return filePath;
+            } else {
+                setIsProcessing(false);
+                const base64Data = await res?.data;
+                if (!base64Data) {
+                    ToastAndroid.show('No image to share!', ToastAndroid.SHORT);
+                    return null;
+                }
+                console.log('data to return: ', base64Data)
+                return base64Data;
+            }
+            setDownloadProgress(0);
+
+        } catch (error: any) {
+            console.log({
+                message: 'error occured!',
+                error: error.message
+            });
+            setIsDownloading(false);
+            setIsProcessing(false);
+            return null;
+        }
+
     }
 
-    // helper fn
+    // to store image in phone gallery  
     const copyMediaToStorage = async (fileName: string, filePath: string) => {
         try {
             await ReactNativeBlobUtil.MediaCollection.copyToMediaStore({
@@ -91,6 +148,30 @@ const ImageCard = ({ item }: { item: any }) => {
             });
         }
     }
+
+    // to share image on platforms
+    const processImageToShare = async (base64Image: any) => {
+        const options = {
+            title: 'Share Image',
+            url: `file://${base64Image}`,
+            message: 'Check out this image! It was created using Sketch.AI.'
+        }
+        try {
+            Share.open(options)
+                .then((res) => {
+                    console.log(res);
+                })
+                .catch((err) => {
+                    err && console.log(err);
+                });
+
+
+        } catch (error) {
+
+        }
+    }
+
+
     return (
         <View style={styles.imageCard}>
             {/* Image */}
@@ -113,7 +194,7 @@ const ImageCard = ({ item }: { item: any }) => {
                 <TouchableOpacity style={styles.actionButton} onPress={handleDownload}>
                     <Feather name='download' size={25} color='#fff' />
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.actionButton}>
+                <TouchableOpacity style={styles.actionButton} onPress={handleShare}>
                     <Feather name='share' size={25} color='#fff' />
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.actionButton}>
@@ -125,15 +206,15 @@ const ImageCard = ({ item }: { item: any }) => {
             </View>
 
             {/* modal container */}
-            <Modal transparent={true} animationType='fade' visible={isDownloading}>
+            <Modal transparent={true} animationType='fade' visible={isDownloading || isProcessing}>
                 <View style={styles.overlay}>
                     <View style={styles.progressContainer}>
                         <Text style={styles.progressTitle}>
-                            Downloading Image...
+                            {isDownloading ? 'Downloading' : 'Processing'} Image...
                         </Text>
                         <Text style={styles.progressText}>{downloadProgress}%</Text>
                         <Text style={styles.progressDescription}>
-                            Please wait while we are downloading your image.
+                            Please wait while we are  {isDownloading ? 'downloading' : 'processing'} your image.
                         </Text>
                         <View style={styles.progressBarContainer}>
                             <View style={[
