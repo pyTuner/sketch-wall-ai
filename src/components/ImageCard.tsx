@@ -9,7 +9,6 @@ import Clipboard from '@react-native-clipboard/clipboard';
 
 
 const ImageCard = ({ item }: { item: any }) => {
-    console.log(item.item);
 
     // states
     const [isDownloading, setIsDownloading] = useState<boolean>(false);
@@ -57,8 +56,11 @@ const ImageCard = ({ item }: { item: any }) => {
             } else {
                 ToastAndroid.show('Failed to copy image!', ToastAndroid.SHORT);
             }
-        } catch (error) {
-            console.log('Error copying image:', error);
+        } catch (error: any) {
+            console.log({
+                error: 'Error copying image!',
+                message: error.message
+            });
             ToastAndroid.show('Error copying image!', ToastAndroid.SHORT);
         }
     }
@@ -67,7 +69,6 @@ const ImageCard = ({ item }: { item: any }) => {
 
     // to download the image
     const downloadImage = async (purpose: any) => {
-        // console.log('downloading...')
 
         // ask permission ---------------->
         const isGranted = await requestWriteStoragePermission(); // android-os permission to store the image into storage
@@ -118,6 +119,7 @@ const ImageCard = ({ item }: { item: any }) => {
                 await copyMediaToStorage(filePath, filePath)
                 setIsDownloading(false);
                 ToastAndroid.show('Image downloaded successfully!', ToastAndroid.SHORT);
+                setDownloadProgress(0);
                 return filePath;
             } else {
                 setIsProcessing(false);
@@ -126,10 +128,9 @@ const ImageCard = ({ item }: { item: any }) => {
                     ToastAndroid.show('No image to share!', ToastAndroid.SHORT);
                     return null;
                 }
-                // console.log('data to return: ', base64Data)
+                setDownloadProgress(0);
                 return base64Data;
             }
-            setDownloadProgress(0);
 
         } catch (error: any) {
             console.log({
@@ -154,9 +155,9 @@ const ImageCard = ({ item }: { item: any }) => {
                 'Image',
                 filePath
             )
-            console.log({
-                message: 'File copied to the media store successfully.'
-            })
+            // console.log({
+            //     message: 'File copied to the media store successfully.'
+            // })
         } catch (error: any) {
             console.log({
                 message: 'Failed to copy file to media store!',
@@ -175,10 +176,13 @@ const ImageCard = ({ item }: { item: any }) => {
         try {
             Share.open(options)
                 .then((res) => {
-                    console.log(res);
+                    // console.log(res);
                 })
-                .catch((err) => {
-                    err && console.log(err);
+                .catch((error) => {
+                    error && console.log({
+                        message: 'Failed to share the image!',
+                        error: error.message
+                    });
                 });
 
 

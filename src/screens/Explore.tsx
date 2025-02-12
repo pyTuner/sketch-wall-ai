@@ -32,8 +32,8 @@ const Explore = () => {
     const handleRefresh = () => {
         setLoading(true);
         try {
-            console.log('refreshing...')
-        } catch (error) {
+            // console.log('refreshing...')
+        } catch (error: any) {
             console.log({
                 message: 'error occured',
                 error: error.message
@@ -56,7 +56,7 @@ const Explore = () => {
                         <ImageCard item={item} />
                     )
                 }}
-                keyExtractor={(item) => item.id}
+                keyExtractor={(item: any) => item.id}
                 showsVerticalScrollIndicator={false}
                 contentContainerStyle={styles.listContainer}
                 refreshControl={
@@ -64,7 +64,7 @@ const Explore = () => {
                         refreshing={loading}
                         onRefresh={handleRefresh}
                         size={'large'}
-                        colors={['#000','#fff']}
+                        colors={['#000', '#fff']}
                     />
                 }
             />

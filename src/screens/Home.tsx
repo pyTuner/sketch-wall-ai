@@ -13,9 +13,12 @@ const Home = () => {
 
     // handle fns
     const handleOpenLink = () => {
-        const url = '';
-        Linking.openURL(url).catch((error) =>
-            console.log(error)
+        const url = 'https://github.com/pyTuner';
+        Linking.openURL(url).catch((error:any) =>
+            console.log({
+                message: 'Failed to open URL!',
+                error: error.message
+            })
         )
     }
 

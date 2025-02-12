@@ -32,7 +32,9 @@ export const requestWriteStoragePermission = async () => {
                 'You need to allow storage permission to download images.',
                 [{ text: 'CLOSE' }]
             );
-            console.log('storage permission denied!');
+            console.log({
+                message: 'storage permission denied!',
+            })
             return false;
         }
     } catch (error) {
