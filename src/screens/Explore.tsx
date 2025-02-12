@@ -63,7 +63,7 @@ const Explore = () => {
                     <RefreshControl
                         refreshing={loading}
                         onRefresh={handleRefresh}
-                        size={'large'}
+                        size={'large' as unknown as number}
                         colors={['#000', '#fff']}
                     />
                 }
